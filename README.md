@@ -33,6 +33,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     subgraph Seed ["seed"]
+        direction TB
         CJ["corpus.json"]:::input
         SE["Embed"]:::embed
         UP["Upsert"]:::vectordb
@@ -40,6 +41,7 @@ flowchart TD
     end
 
     subgraph Transcribe ["transcribe"]
+        direction TB
         WAV2["WAV"]:::input
         WH["Whisper"]:::asr
         RT["Transcript"]:::asr
