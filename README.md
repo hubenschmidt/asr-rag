@@ -56,6 +56,8 @@ flowchart TD
         SYS --> LLM2 --> CT
     end
 
+    Seed --> Transcribe
+
     classDef input fill:#3b82f6,stroke:#1e40af,color:#fff
     classDef asr fill:#f59e0b,stroke:#b45309,color:#fff
     classDef embed fill:#6366f1,stroke:#4338ca,color:#fff
