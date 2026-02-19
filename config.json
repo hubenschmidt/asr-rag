@@ -1,0 +1,5 @@
+{
+  "whisper_url": "http://localhost:8178",
+  "ollama_url": "http://localhost:11434",
+  "qdrant_url": "localhost:6334"
+}
