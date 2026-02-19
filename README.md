@@ -5,13 +5,20 @@ Teaching PoC that demonstrates how a RAG pipeline can improve ASR transcription 
 ## Architecture
 
 ```mermaid
-flowchart LR
-    WAV["WAV File"]:::input -- "file path" --> ASR["Whisper Server"]:::asr
-    ASR -- "raw transcript" --> EMB["Ollama Embed"]:::embed
-    EMB -- "query vector" --> QD["Qdrant Search"]:::vectordb
-    QD -- "top-5 Go terms" --> LLM["Ollama LLM"]:::llm
-    ASR -. "raw transcript" .-> LLM
-    LLM -- "corrected text" --> OUT["Output"]:::output
+flowchart TD
+    WAV["WAV File"]:::input
+    ASR["Whisper"]:::asr
+    EMB["Embed"]:::embed
+    QD["Qdrant"]:::vectordb
+    LLM["LLM"]:::llm
+    OUT["Output"]:::output
+
+    WAV --> ASR
+    ASR --> EMB
+    EMB --> QD
+    QD --> LLM
+    ASR -.-> LLM
+    LLM --> OUT
 
     classDef input fill:#3b82f6,stroke:#1e40af,color:#fff
     classDef asr fill:#f59e0b,stroke:#b45309,color:#fff
@@ -24,21 +31,29 @@ flowchart LR
 ## RAG Pipeline Detail
 
 ```mermaid
-flowchart TB
-    subgraph Seed ["go run . seed"]
-        CJ["corpus.json<br/>~60 Go terms"]:::input --> SE["Embed each term"]:::embed
-        SE --> UP["Upsert to Qdrant"]:::vectordb
+flowchart TD
+    subgraph Seed ["seed"]
+        CJ["corpus.json"]:::input
+        SE["Embed"]:::embed
+        UP["Upsert"]:::vectordb
+        CJ --> SE --> UP
     end
 
-    subgraph Transcribe ["go run . transcribe file.wav"]
-        WAV["Read WAV"]:::input --> WH["Whisper /inference<br/>multipart POST"]:::asr
-        WH --> RT["Raw Transcript"]:::asr
-        RT --> QE["Embed transcript"]:::embed
-        QE --> QS["Qdrant top-5 search"]:::vectordb
-        QS --> SYS["Build system prompt<br/>with retrieved terms"]:::llm
-        RT --> SYS
-        SYS --> LLM["Ollama /api/chat"]:::llm
-        LLM --> CT["Corrected Transcript"]:::output
+    subgraph Transcribe ["transcribe"]
+        WAV2["WAV"]:::input
+        WH["Whisper"]:::asr
+        RT["Transcript"]:::asr
+        QE["Embed"]:::embed
+        QS["Qdrant"]:::vectordb
+        SYS["Prompt"]:::llm
+        LLM2["LLM"]:::llm
+        CT["Corrected"]:::output
+
+        WAV2 --> WH --> RT
+        RT --> QE --> QS
+        QS --> SYS
+        RT -.-> SYS
+        SYS --> LLM2 --> CT
     end
 
     classDef input fill:#3b82f6,stroke:#1e40af,color:#fff
