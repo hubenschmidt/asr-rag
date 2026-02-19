@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	cfg, err := loadConfig("configg.json")
+	cfg, err := loadConfig("config.json")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "config: %v\n", err)
 		os.Exit(1)

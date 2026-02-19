@@ -8,12 +8,12 @@ WAV → whisper-server → raw transcript → embed → Qdrant search → LLM co
 
 ## Stack (all local, no API keys)
 
-| Component | Tool | Notes |
-|-----------|------|-------|
-| ASR | whisper-server HTTP API | `~/.local/src/whisper.cpp/build/bin/whisper-server` |
-| Embeddings | Ollama `nomic-embed-text` (768-dim) | Already installed |
-| Vector DB | Qdrant (Docker, gRPC on :6334) | `github.com/qdrant/go-client` |
-| LLM | Ollama `llama3.2:3b` | Already installed |
+| Component  | Tool                                | Notes                                               |
+| ---------- | ----------------------------------- | --------------------------------------------------- |
+| ASR        | whisper-server HTTP API             | `~/.local/src/whisper.cpp/build/bin/whisper-server` |
+| Embeddings | Ollama `nomic-embed-text` (768-dim) | Already installed                                   |
+| Vector DB  | Qdrant (Docker, gRPC on :6334)      | `github.com/qdrant/go-client`                       |
+| LLM        | Ollama `llama3.2:3b`                | Already installed                                   |
 
 ## Project Structure
 
@@ -36,52 +36,63 @@ asr-rag/
 Each phase is a reviewable unit. We pause after each for review before continuing.
 
 ### Phase 1 — Project scaffold + config
+
 - `go mod init`, `.env`, `docker-compose.yml`
 - `main.go` with map-based command dispatch (stubs only)
 - **Deliverables:** project compiles, `docker compose up -d` starts Qdrant
 
 ### Phase 2 — Data model + corpus
+
 - `corpus.json`: ~60 Go term/definition pairs
 - Go struct for corpus entries, `go:embed` to bake into binary
 - **Deliverables:** `corpus.json` exists, struct loads and parses at startup
 
 ### Phase 3 — Embedder client (`internal/embedder/ollama.go`)
+
 - POST to `{OLLAMA_URL}/api/embed`
 - Single-text and batch embed functions returning `[]float32`
 - **Deliverables:** `go run . seed` can embed one test string (print dim count)
 
 ### Phase 4 — Vector DB client (`internal/vectordb/qdrant.go`)
+
 - Qdrant gRPC client: `EnsureCollection` (768-dim, cosine), `Upsert`, `Search`
 - **Deliverables:** `go run . seed` embeds all corpus terms → upserts to Qdrant
 
 ### Phase 5 — Search command
+
 - `go run . search <query>` — embed query → Qdrant top-5 → print results
 - **Deliverables:** `go run . search "go routines"` returns goroutine-related hits
 
 ### Phase 6 — ASR client (`internal/asr/whisper.go`)
+
 - Multipart WAV POST to whisper-server `/inference`, returns text
 - Simplified from reference: takes file path, reads bytes, posts directly
 - **Deliverables:** `go run . transcribe sample.wav` prints raw transcript
 
 ### Phase 7 — LLM corrector (`internal/corrector/llm.go`)
+
 - POST to `{OLLAMA_URL}/api/chat` with system prompt containing retrieved terms
 - **Deliverables:** corrector function callable with (transcript, []terms) → corrected text
 
 ### Phase 8 — Full pipeline wiring
+
 - `transcribe` command: WAV → whisper → embed → search → LLM correct → print raw vs corrected
 - **Deliverables:** end-to-end demo working
 
 ### Phase 9 — Mic recorder (`internal/recorder/mic.go`)
+
 - PortAudio 16kHz mono capture → WAV bytes
 - `record [seconds]` command feeds into same pipeline as `transcribe`
 - **Deliverables:** `go run . record 5` captures and corrects live speech
 
 ## Key Patterns
+
 - Guard clauses / early returns (no nested conditionals)
 - Map dispatch instead of switch/case
 - Multipart WAV upload pattern from reference at `~/asr-llm-tts-poc/services/gateway/internal/pipeline/asr.go:127-153`
 
 ## Verification
+
 1. `docker compose up -d` — Qdrant dashboard at `localhost:6333/dashboard`
 2. Start whisper-server: `~/.local/src/whisper.cpp/build/bin/whisper-server -m ~/.local/src/whisper.cpp/models/ggml-medium.en.bin --port 8178`
 3. `go run . seed` — N terms embedded and upserted
