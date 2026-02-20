@@ -1,6 +1,6 @@
-# ASR-RAG: Go Jargon Correction via RAG
+# ASR-RAG: Go jargon correction via RAG post-processing
 
-Teaching PoC that demonstrates how a RAG pipeline can improve ASR transcription quality for Go programming terminology. Whisper often mishears Go-specific jargon (e.g., "go routines" instead of "goroutines"). By retrieving relevant terminology from a vector database and feeding it to an LLM, we correct these errors post-transcription.
+Demonstrates RAG pipeline to improve automatic speech recognition transcription quality for Go programming terminology. Whisper often mishears Go-specific jargon (e.g., "go routines" instead of "goroutines"). By retrieving relevant terminology from a vector database and feeding it to an LLM, errors are corrected post-transcription.
 
 ## Architecture
 
@@ -70,23 +70,23 @@ flowchart TD
 
 ## Stack
 
-| Component | Tool | Port |
-|-----------|------|------|
-| ASR | whisper-server (whisper.cpp) | :8178 |
+| Component  | Tool                                | Port   |
+| ---------- | ----------------------------------- | ------ |
+| ASR        | whisper-server (whisper.cpp)        | :8178  |
 | Embeddings | Ollama `nomic-embed-text` (768-dim) | :11434 |
-| Vector DB | Qdrant (Docker, gRPC) | :6334 |
-| LLM | Ollama `llama3.2:3b` | :11434 |
+| Vector DB  | Qdrant (Docker, gRPC)               | :6334  |
+| LLM        | Ollama `llama3.2:3b`                | :11434 |
 
 ## Color Legend
 
-| Color | Component |
-|-------|-----------|
-| **Blue** | Input (WAV, corpus) |
-| **Amber** | ASR — Whisper |
+| Color      | Component           |
+| ---------- | ------------------- |
+| **Blue**   | Input (WAV, corpus) |
+| **Amber**  | ASR — Whisper       |
 | **Indigo** | Embeddings — Ollama |
-| **Red** | Vector DB — Qdrant |
-| **Green** | LLM — Ollama |
-| **Gray** | Output |
+| **Red**    | Vector DB — Qdrant  |
+| **Green**  | LLM — Ollama        |
+| **Gray**   | Output              |
 
 ## Usage
 
