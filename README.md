@@ -1,4 +1,4 @@
-# ASR-RAG: Go jargon correction via RAG post-processing
+# Go jargon correction via RAG post-processing
 
 Demonstrates RAG pipeline to improve automatic speech recognition transcription quality for Go programming terminology. Whisper often mishears Go-specific jargon (e.g., "go routines" instead of "goroutines"). By retrieving relevant terminology from a vector database and feeding it to an LLM, errors are corrected post-transcription.
 
