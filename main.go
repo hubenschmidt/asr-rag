@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/hubenschmidt/asr-rag/internal/embedder"
 )
 
 type config struct {
@@ -53,20 +55,32 @@ type command struct {
 }
 
 func main() {
-	debug, err := loadCorpus("corpus.json")
-	fmt.Println("corpus:", debug)
-
 	cfg, err := loadConfig("config.json")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "config: %v\n", err)
 		os.Exit(1)
 	}
 
+	cps, err := loadCorpus("corpus.json")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "corpus: %v\n", err)
+	}
+
 	commands := map[string]command{ // e.g. command["seed"]run // this is like Python dict[str, Command] or typescript Record<string, Command>
 		"seed": {
 			usage: "seed -- embed corpus and upsert to Qdrant",
 			run: func(args []string) error {
-				fmt.Println("seed: not yet implemented")
+				emb := embedder.New(cfg.OllamaURL, "nomic-embed-text")
+				fmt.Println(emb)
+
+				for _, entry := range *cps {
+					vec, err := emb.Embed(entry.Term + ": " + entry.Definition)
+					if err != nil {
+						return err
+					}
+					fmt.Println(entry.Term, "dims =", len(vec))
+				}
+
 				return nil
 			},
 		},
