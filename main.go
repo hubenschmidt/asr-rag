@@ -6,12 +6,56 @@ import (
 	"os"
 )
 
+type config struct {
+	WhisperURL string `json:"whisper_url"`
+	OllamaURL  string `json:"ollama_url"`
+	QdrantURL  string `json:"qdrant_url"`
+}
+
+func loadConfig(path string) (*config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file at %s: %w", path, err)
+	}
+
+	var cfg config
+
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("error unmarshalling: %w", err)
+	}
+
+	return &cfg, nil
+}
+
+type corpusEntry struct {
+	Term       string `json:"term"`
+	Definition string `json:"definition"`
+}
+
+func loadCorpus(path string) (*[]corpusEntry, error) {
+	data, err := os.ReadFile(path)
+
+	if err != nil {
+		fmt.Println("Failed to load corpus")
+	}
+
+	var entries []corpusEntry
+	if err := json.Unmarshal(data, &entries); err != nil {
+		return nil, fmt.Errorf("parse %s: %w", path, err)
+	}
+
+	return &entries, nil // nil is returned in error interface
+}
+
 type command struct {
 	usage string
 	run   func(args []string) error
 }
 
 func main() {
+	debug, err := loadCorpus("corpus.json")
+	fmt.Println("corpus:", debug)
+
 	cfg, err := loadConfig("config.json")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "config: %v\n", err)
@@ -69,6 +113,7 @@ func main() {
 	}
 
 	fmt.Println(*cfg) // *cfg dereferences and prints {http://localhost:8178}
+
 }
 
 func printUsage(commands map[string]command) {
@@ -77,25 +122,4 @@ func printUsage(commands map[string]command) {
 	for _, cmd := range commands {
 		fmt.Println("  " + cmd.usage)
 	}
-}
-
-type config struct {
-	WhisperURL string `json:"whisper_url"`
-	OllamaURL  string `json:"ollama_url"`
-	QdrantURL  string `json:"qdrant_url"`
-}
-
-func loadConfig(path string) (*config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("error reading file at %s: %w", path, err)
-	}
-
-	var cfg config
-
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("error unmarshalling: %w", err)
-	}
-
-	return &cfg, nil
 }
