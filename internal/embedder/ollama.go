@@ -40,19 +40,28 @@ type embedResponse struct {
 // Used in two places:
 //   - seed: embed each corpus entry, then store the vector in Qdrant
 //   - search/transcribe: embed the query text, then find similar vectors in Qdrant
+
 func (c *Client) Embed(text string) ([]float32, error) {
 	// 1. Build the JSON request body
-	body, err := json.Marshal(embedRequest{Model: c.model, Input: text})
+	embedReq := embedRequest{Model: c.model, Input: text}
+	body, err := json.Marshal(embedReq)
 	if err != nil {
-		return nil, fmt.Errorf("marshal embed request: %w", err)
+		return nil, fmt.Errorf("error marshalling embed request: %w", err)
 	}
 
 	// 2. POST to Ollama's embed endpoint
-	resp, err := http.Post(c.url+"/api/embed", "application/json", bytes.NewReader(body))
+	// here http.Post method expects body as 'io.Reader' which should implement Read() method.
+	// So, bytes package will take care of that.
+	b := bytes.NewReader(body)
+	postURL := c.url + "/api/embed"
+	resp, err := http.Post(postURL, "application/json", b)
+
 	if err != nil {
-		return nil, fmt.Errorf("embed request: %w", err)
+		return nil, fmt.Errorf("error posting to %s/api/embed: %w", err)
 	}
-	defer resp.Body.Close() // always close the response body to avoid leaking connections
+
+	// Ensure the response body is closed after use to prevent resource leaks
+	defer resp.Body.Close()
 
 	// 3. Check for non-200 status
 	if resp.StatusCode != http.StatusOK {
@@ -63,7 +72,7 @@ func (c *Client) Embed(text string) ([]float32, error) {
 	// 4. Decode the JSON response into our struct
 	var result embedResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("decode embed response: %w", err)
+		return nil, fmt.Errorf("error decoding JSON response: %w", err)
 	}
 
 	// 5. Sanity check — make sure we got at least one vector back

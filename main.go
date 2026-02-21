@@ -71,7 +71,6 @@ func main() {
 			usage: "seed -- embed corpus and upsert to Qdrant",
 			run: func(args []string) error {
 				emb := embedder.New(cfg.OllamaURL, "nomic-embed-text")
-				fmt.Println(emb)
 
 				for _, entry := range *cps {
 					vec, err := emb.Embed(entry.Term + ": " + entry.Definition)
@@ -125,8 +124,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", name, err) // Fprintf uses format verbs
 		os.Exit(1)
 	}
-
-	fmt.Println(*cfg) // *cfg dereferences and prints {http://localhost:8178}
 
 }
 
