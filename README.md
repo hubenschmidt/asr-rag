@@ -90,14 +90,28 @@ flowchart TD
 
 ## Usage
 
+### Start services
+
 ```bash
-# Start Qdrant
-docker compose up -d
+# Start Qdrant (Docker) + whisper-server (local, GPU)
+./run.sh
 
-# Start whisper-server
-~/.local/src/whisper.cpp/build/bin/whisper-server \
-  -m ~/.local/src/whisper.cpp/models/ggml-medium.en.bin --port 8178
+# View Qdrant logs (optional)
+docker compose logs -f
 
+# Qdrant dashboard
+# http://localhost:6333/dashboard
+```
+
+### Stop services
+
+```bash
+./stop.sh
+```
+
+### Commands
+
+```bash
 # Seed the vector DB with Go terminology
 go run . seed
 
@@ -105,7 +119,7 @@ go run . seed
 go run . search "go routines"
 
 # Transcribe and correct a WAV file
-go run . transcribe sample.wav
+go run . transcribe audiosamples/goroutines.wav
 
 # Record from mic and correct (default 5 seconds)
 go run . record 5

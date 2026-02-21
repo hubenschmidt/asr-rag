@@ -107,12 +107,12 @@ func (c *Client) Search(ctx context.Context, vec []float32, limit uint64) ([]Sea
 		return nil, fmt.Errorf("search: %w", err)
 	}
 
-	results := make([]SearchResult, 0, len(points))
-	for _, p := range points {
+	var results []SearchResult
+	for _, el := range points { // _ is index
 		results = append(results, SearchResult{
-			Term:       p.Payload["term"].GetStringValue(),
-			Definition: p.Payload["definition"].GetStringValue(),
-			Score:      p.Score,
+			Term:       el.Payload["term"].GetStringValue(),
+			Definition: el.Payload["definition"].GetStringValue(),
+			Score:      el.Score,
 		})
 	}
 	return results, nil

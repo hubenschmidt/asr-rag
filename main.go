@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hubenschmidt/asr-rag/internal/asr"
 	"github.com/hubenschmidt/asr-rag/internal/embedder"
 	"github.com/hubenschmidt/asr-rag/internal/vectordb"
 )
@@ -115,7 +116,17 @@ func main() {
 		"transcribe": {
 			usage: "transcribe <file.wav> -- transcribe and correct a WAV file",
 			run: func(args []string) error {
-				fmt.Println("transcribe: not yet implemented")
+				if len(args) < 1 {
+					return fmt.Errorf("usage: transcribe <file.wav>")
+				}
+
+				// Send WAV to whisper-server, get raw transcript
+				whisper := asr.New(cfg.WhisperURL)
+				text, err := whisper.Transcribe(args[0])
+				if err != nil {
+					return err
+				}
+				fmt.Println("raw transcript:", text)
 				return nil
 			},
 		},
@@ -129,7 +140,34 @@ func main() {
 		"search": {
 			usage: "search <query> -- search Qdrant for similar Go terms",
 			run: func(args []string) error {
-				fmt.Println("search: not yet implemented")
+				if len(args) < 1 {
+					return fmt.Errorf("usage: search <query>")
+				}
+				query := args[0]
+
+				// Embed the query text into a vector
+				emb := embedder.New(cfg.OllamaURL, "nomic-embed-text")
+				vec, err := emb.Embed(query)
+				if err != nil {
+					return err
+				}
+
+				// Search Qdrant for the 5 most similar terms
+				db, err := vectordb.New(cfg.QdrantURL)
+				if err != nil {
+					return err
+				}
+				defer db.Close()
+
+				results, err := db.Search(context.Background(), vec, 5)
+				if err != nil {
+					return err
+				}
+
+				// Print results
+				for _, r := range results {
+					fmt.Printf("%.4f  %s — %s\n", r.Score, r.Term, r.Definition)
+				}
 				return nil
 			},
 		},
