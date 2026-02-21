@@ -57,7 +57,7 @@ func (c *Client) Embed(text string) ([]float32, error) {
 	resp, err := http.Post(postURL, "application/json", b)
 
 	if err != nil {
-		return nil, fmt.Errorf("error posting to %s/api/embed: %w", err)
+		return nil, fmt.Errorf("error posting to %s/api/embed:", err)
 	}
 
 	// Ensure the response body is closed after use to prevent resource leaks
