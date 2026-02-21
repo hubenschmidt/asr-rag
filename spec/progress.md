@@ -8,7 +8,7 @@
 | 4     | Vector DB client          | done    |
 | 5     | Search command            | done    |
 | 6     | ASR client                | done    |
-| 7     | LLM corrector             | pending |
+| 7     | LLM corrector             | done    |
 | 8     | Full pipeline wiring      | pending |
 | 9     | Mic recorder              | pending |
 
@@ -20,3 +20,4 @@
 - **Phase 4** — `internal/vectordb/qdrant.go` — Qdrant gRPC client with EnsureCollection, Upsert, Search. Seed command wired end-to-end.
 - **Phase 5** — Search command wired: embed query → Qdrant top-5 → print scored results.
 - **Phase 6** — `internal/asr/whisper.go` — multipart WAV POST to whisper-server, transcribe command wired.
+- **Phase 7** — `internal/corrector/llm.go` — Ollama /api/chat client for transcript correction with Go term context.
