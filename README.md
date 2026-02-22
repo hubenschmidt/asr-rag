@@ -126,9 +126,10 @@ go run . seed
 # Search for similar terms
 go run . search "go routines"
 
-# Transcribe and correct a WAV file
-go run . transcribe audiosamples/goroutines.wav
-
 # Record from mic and correct (default 5 seconds)
 go run . record 5
 ```
+
+### Example output
+
+![Record and correct](screenshot.png)

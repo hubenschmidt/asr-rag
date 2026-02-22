@@ -72,7 +72,7 @@ func (c *Client) Correct(transcript string, terms []Term) (string, error) {
 			{Role: "user", Content: transcript},
 		},
 	})
-	fmt.Printf("chat request: %s:\n\n", body)
+	fmt.Printf("\nchat request:\n %s:\n\n", body)
 	if err != nil {
 		return "", fmt.Errorf("marshal chat request: %w", err)
 	}
