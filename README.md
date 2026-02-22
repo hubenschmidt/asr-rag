@@ -68,7 +68,7 @@ flowchart TD
     classDef output fill:#64748b,stroke:#334155,color:#fff
 ```
 
-## How it works
+## Control Flow
 
 ### 1. Seed — build the knowledge base
 
@@ -98,14 +98,14 @@ ollama pull llama3.2:3b
 
 ## Stack
 
-| Component  | Tool                                | Port   |
-| ---------- | ----------------------------------- | ------ |
-| ASR        | whisper-server (whisper.cpp)        | :8178  |
+| Component  | Tool                                   | Port   |
+| ---------- | -------------------------------------- | ------ |
+| ASR        | whisper-server (whisper.cpp)           | :8178  |
 | Embeddings | Ollama `qwen3-embedding:8b` (4096-dim) | :11434 |
-| Vector DB  | Qdrant (Docker, gRPC)               | :6334  |
-| LLM        | Ollama `llama3.2:3b`                | :11434 |
+| Vector DB  | Qdrant (Docker, gRPC)                  | :6334  |
+| LLM        | Ollama `llama3.2:3b`                   | :11434 |
 
-## Color Legend
+## Legend
 
 | Color      | Component           |
 | ---------- | ------------------- |
