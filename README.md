@@ -68,12 +68,20 @@ flowchart TD
     classDef output fill:#64748b,stroke:#334155,color:#fff
 ```
 
+## Prerequisites
+
+```bash
+# Pull required Ollama models
+ollama pull qwen3-embedding:8b
+ollama pull llama3.2:3b
+```
+
 ## Stack
 
 | Component  | Tool                                | Port   |
 | ---------- | ----------------------------------- | ------ |
 | ASR        | whisper-server (whisper.cpp)        | :8178  |
-| Embeddings | Ollama `nomic-embed-text` (768-dim) | :11434 |
+| Embeddings | Ollama `qwen3-embedding:8b` (4096-dim) | :11434 |
 | Vector DB  | Qdrant (Docker, gRPC)               | :6334  |
 | LLM        | Ollama `llama3.2:3b`                | :11434 |
 

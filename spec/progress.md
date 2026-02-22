@@ -9,8 +9,8 @@
 | 5     | Search command            | done    |
 | 6     | ASR client                | done    |
 | 7     | LLM corrector             | done    |
-| 8     | Full pipeline wiring      | pending |
-| 9     | Mic recorder              | pending |
+| 8     | Full pipeline wiring      | done    |
+| 9     | Mic recorder              | done    |
 
 ## Log
 
@@ -21,3 +21,5 @@
 - **Phase 5** — Search command wired: embed query → Qdrant top-5 → print scored results.
 - **Phase 6** — `internal/asr/whisper.go` — multipart WAV POST to whisper-server, transcribe command wired.
 - **Phase 7** — `internal/corrector/llm.go` — Ollama /api/chat client for transcript correction with Go term context.
+- **Phase 8** — Full pipeline wired: WAV → whisper → embed → Qdrant search → LLM correct → print raw vs corrected.
+- **Phase 9** — `internal/recorder/mic.go` — PortAudio 16kHz mono capture → WAV encoding. Record command wired to full pipeline.

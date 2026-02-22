@@ -1,13 +1,16 @@
 package main
 
 import (
-	"context"
+	"context" // qdrant will not compile without `context`
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/hubenschmidt/asr-rag/internal/asr"
+	"github.com/hubenschmidt/asr-rag/internal/corrector"
 	"github.com/hubenschmidt/asr-rag/internal/embedder"
+	"github.com/hubenschmidt/asr-rag/internal/recorder"
 	"github.com/hubenschmidt/asr-rag/internal/vectordb"
 )
 
@@ -84,7 +87,7 @@ func main() {
 			usage: "seed -- embed corpus and upsert to Qdrant",
 			run: func(args []string) error {
 				// Create embedder and vector DB clients from config URLs
-				emb := embedder.New(cfg.OllamaURL, "nomic-embed-text")
+				emb := embedder.New(cfg.OllamaURL, "qwen3-embedding:8b")
 
 				db, err := vectordb.New(cfg.QdrantURL)
 				if err != nil {
@@ -120,20 +123,113 @@ func main() {
 					return fmt.Errorf("usage: transcribe <file.wav>")
 				}
 
-				// Send WAV to whisper-server, get raw transcript
+				// WAV → whisper → raw transcript
 				whisper := asr.New(cfg.WhisperURL)
 				text, err := whisper.Transcribe(args[0])
 				if err != nil {
 					return err
 				}
-				fmt.Println("raw transcript:", text)
+				fmt.Println("raw:", text)
+
+				// Embed the raw transcript
+				emb := embedder.New(cfg.OllamaURL, "qwen3-embedding:8b")
+				vec, err := emb.Embed(text)
+				if err != nil {
+					return err
+				}
+
+				// Search Qdrant for the 5 most similar Go terms
+				db, err := vectordb.New(cfg.QdrantURL)
+				if err != nil {
+					return err
+				}
+				defer db.Close()
+
+				results, err := db.Search(context.Background(), vec, 10)
+				if err != nil {
+					return err
+				}
+
+				// Convert search results to corrector terms
+				terms := make([]corrector.Term, len(results))
+				for i, r := range results {
+					terms[i] = corrector.Term{Name: r.Term, Definition: r.Definition}
+				}
+
+				// LLM correction using retrieved terms as context
+				llm := corrector.New(cfg.OllamaURL, "llama3.2:3b")
+				corrected, err := llm.Correct(text, terms)
+				if err != nil {
+					return err
+				}
+
+				fmt.Println("corrected:", corrected)
 				return nil
 			},
 		},
 		"record": {
 			usage: "record [seconds] -- record from mic, transcribe, and correct",
 			run: func(args []string) error {
-				fmt.Println("record: not yet implemented")
+				// Parse optional seconds arg, default 5
+				seconds := 5
+				if len(args) > 0 {
+					n, err := strconv.Atoi(args[0])
+					if err != nil {
+						return fmt.Errorf("invalid seconds: %w", err)
+					}
+					seconds = n
+				}
+
+				// Record from mic → WAV file
+				tmp := "recording.wav"
+				if err := recorder.Record(seconds, tmp); err != nil {
+					return err
+				}
+				defer os.Remove(tmp)
+
+				// WAV → whisper → raw transcript
+				whisper := asr.New(cfg.WhisperURL)
+				text, err := whisper.Transcribe(tmp)
+				if err != nil {
+					return err
+				}
+				fmt.Println("raw:", text)
+
+				// Embed the raw transcript
+				emb := embedder.New(cfg.OllamaURL, "qwen3-embedding:8b")
+				vec, err := emb.Embed(text)
+				if err != nil {
+					return err
+				}
+
+				// Search Qdrant for the 5 most similar Go terms
+				db, err := vectordb.New(cfg.QdrantURL)
+				if err != nil {
+					return err
+				}
+				defer db.Close()
+
+				results, err := db.Search(context.Background(), vec, 10)
+				if err != nil {
+					return err
+				}
+
+				// Convert search results to corrector terms
+				terms := make([]corrector.Term, len(results))
+				for i, r := range results {
+					terms[i] = corrector.Term{Name: r.Term, Definition: r.Definition}
+				}
+
+				fmt.Println("corrector search terms: ", terms)
+
+				// LLM correction using retrieved terms as context
+				llm := corrector.New(cfg.OllamaURL, "llama3.2:3b")
+				corrected, err := llm.Correct(text, terms)
+				if err != nil {
+					return err
+				}
+
+				fmt.Println("corrected:", corrected)
 				return nil
 			},
 		},
@@ -146,7 +242,7 @@ func main() {
 				query := args[0]
 
 				// Embed the query text into a vector
-				emb := embedder.New(cfg.OllamaURL, "nomic-embed-text")
+				emb := embedder.New(cfg.OllamaURL, "qwen3-embedding:8b")
 				vec, err := emb.Embed(query)
 				if err != nil {
 					return err
@@ -159,7 +255,7 @@ func main() {
 				}
 				defer db.Close()
 
-				results, err := db.Search(context.Background(), vec, 5)
+				results, err := db.Search(context.Background(), vec, 10)
 				if err != nil {
 					return err
 				}

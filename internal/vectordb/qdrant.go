@@ -37,7 +37,7 @@ func (c *Client) Close() error {
 
 // EnsureCollection creates the "go_terms" collection if it doesn't already exist.
 // Makes seed idempotent — safe to run multiple times.
-// Uses 768 dimensions (nomic-embed-text) with cosine similarity.
+// Uses 4096 dimensions (qwen3-embedding:8b) with cosine similarity.
 func (c *Client) EnsureCollection(ctx context.Context) error {
 	collections, err := c.conn.ListCollections(ctx)
 	if err != nil {
@@ -53,7 +53,7 @@ func (c *Client) EnsureCollection(ctx context.Context) error {
 	if err := c.conn.CreateCollection(ctx, &qdrant.CreateCollection{
 		CollectionName: collectionName,
 		VectorsConfig: qdrant.NewVectorsConfig(&qdrant.VectorParams{
-			Size:     768,
+			Size:     4096,
 			Distance: qdrant.Distance_Cosine,
 		}),
 	}); err != nil {

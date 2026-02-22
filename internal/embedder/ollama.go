@@ -9,11 +9,11 @@ import (
 )
 
 // Client talks to Ollama's /api/embed endpoint to convert text into vectors.
-// The vectors are 768-dimensional floats (for nomic-embed-text).
+// The vectors are 4096-dimensional floats (for qwen3-embedding:8b).
 // These vectors capture semantic meaning — similar text produces similar vectors.
 type Client struct {
 	url   string // Ollama base URL, e.g. "http://localhost:11434"
-	model string // embedding model name, e.g. "nomic-embed-text"
+	model string // embedding model name, e.g. "qwen3-embedding:8b"
 }
 
 // New creates an embedder client. This is Go's constructor pattern —
@@ -23,7 +23,7 @@ func New(url string, model string) *Client {
 }
 
 // embedRequest is the JSON body sent to Ollama.
-// {"model": "nomic-embed-text", "input": "goroutine: A lightweight thread..."}
+// {"model": "qwen3-embedding:8b", "input": "goroutine: A lightweight thread..."}
 type embedRequest struct {
 	Model string `json:"model"`
 	Input string `json:"input"`

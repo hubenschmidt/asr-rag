@@ -58,7 +58,7 @@ type Term struct {
 // Correct takes a raw transcript and relevant Go terms, asks the LLM to fix misheard jargon.
 func (c *Client) Correct(transcript string, terms []Term) (string, error) {
 	// Build system prompt with retrieved Go terms as context
-	prompt := "Fix misheard Go terms in this transcript using the provided reference. Return only the corrected text.\n\nReference terms:\n"
+	prompt := "You fix speech-to-text transcripts about Go programming.\nCommon errors: words split apart (\"go routines\" should be \"goroutines\"), wrong spelling, missing camelCase.\nRewrite the transcript replacing EVERY misheard word with the exact term from the list. Output ONLY the corrected text.\n\nTerms:\n"
 	for _, t := range terms {
 		prompt += "- " + t.Name + ": " + t.Definition + "\n"
 	}
@@ -72,6 +72,7 @@ func (c *Client) Correct(transcript string, terms []Term) (string, error) {
 			{Role: "user", Content: transcript},
 		},
 	})
+	fmt.Printf("chat request: %s:\n\n", body)
 	if err != nil {
 		return "", fmt.Errorf("marshal chat request: %w", err)
 	}
