@@ -68,6 +68,26 @@ flowchart TD
     classDef output fill:#64748b,stroke:#334155,color:#fff
 ```
 
+## How it works
+
+### 1. Seed — build the knowledge base
+
+`corpus.json` contains 61 Go terms and definitions. The `seed` command sends each entry through the `qwen3-embedding:8b` model to produce a 4096-dimensional vector, then stores the vector alongside its term and definition in Qdrant.
+
+### 2. Record — capture and transcribe speech
+
+The `record` command captures audio from the microphone, saves it as a WAV file, and sends it to a local Whisper server for speech-to-text. Whisper returns a raw transcript that often contains errors — e.g. "Go routines" instead of "goroutines".
+
+### 3. Retrieve — find relevant terms
+
+The raw transcript is embedded into the same vector space as the corpus. Qdrant performs a cosine similarity search and returns the 5 closest Go terms. This narrows 61 candidates down to a handful that are semantically relevant to what was spoken.
+
+### 4. Correct — LLM picks the right substitutions
+
+The raw transcript and the 5 retrieved terms are sent to `llama3.2:3b` as a chat prompt. The system instruction tells the LLM to replace misheard words with the correct Go term from the list. The LLM decides which terms apply and outputs the corrected transcript.
+
+The key insight is that Qdrant handles **recall** (finding plausible matches) while the LLM handles **precision** (deciding which substitutions are correct in context).
+
 ## Prerequisites
 
 ```bash
